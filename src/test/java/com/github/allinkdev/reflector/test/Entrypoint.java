@@ -3,17 +3,23 @@ package com.github.allinkdev.reflector.test;
 import com.github.allinkdev.reflector.Reflector;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class Entrypoint {
     public static void main(final String... args) {
-        final Reflector<TestClass> reflector = Reflector.createNew(TestClass.class);
+        final Optional<Reflector<?>> reflectorOptional = Reflector.createNew("com.github.allinkdev.reflector.test.TestClass", Entrypoint.class.getClassLoader());
 
-        final List<Class<?>> staticFields = reflector
+        if (!reflectorOptional.isPresent()) {
+            throw new IllegalStateException("Reflector optional was not present!");
+        }
+
+        final Reflector<?> reflector = reflectorOptional.get();
+        final List<String> classNames = reflector
                 .allSubClassesInCurrentPackage()
-                .peek(c -> System.out.println(c))
+                .map(Class::getTypeName)
                 .collect(Collectors.toList());
 
-        //System.out.printf("[%s]", String.join(", ", staticFields));
+        System.out.printf("[%s]", String.join(", ", classNames));
     }
 }

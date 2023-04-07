@@ -29,6 +29,31 @@ public final class Reflector<O> {
         this.objectClass = objectClass;
     }
 
+    public static Optional<Reflector<?>> createNew(final String className, final ClassLoader classLoader) {
+        final Class<?> referencedClass;
+
+        try {
+            referencedClass = Class.forName(className, true, classLoader);
+        } catch (ClassNotFoundException e) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new Reflector<>(referencedClass));
+    }
+
+
+    public static Optional<Reflector<?>> createNew(final String className, final Object instance, final ClassLoader classLoader) {
+        final Class<?> referencedClass;
+
+        try {
+            referencedClass = classLoader.loadClass(className);
+        } catch (ClassNotFoundException e) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new Reflector<>(instance, referencedClass));
+    }
+
     public static <O> Reflector<O> createNew(final Class<? extends O> objectClass) {
         return new Reflector<>(objectClass);
     }
