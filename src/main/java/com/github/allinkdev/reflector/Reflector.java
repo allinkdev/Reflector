@@ -4,10 +4,12 @@ import com.github.allinkdev.reflector.field.Field;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.*;
@@ -83,7 +85,13 @@ public final class Reflector<O> {
         final ProtectionDomain protectionDomain = caller.getProtectionDomain();
         final CodeSource codeSource = protectionDomain.getCodeSource();
         final URL codeSourceLocation = codeSource.getLocation();
-        final String codePath = codeSourceLocation.getPath();
+        final String codePath;
+
+        try {
+            codePath = URLDecoder.decode(codeSourceLocation.getPath(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return Collections.emptyList();
+        }
 
         if (codePath.endsWith(".jar")) {
             final JarFile jarFile;
@@ -91,12 +99,14 @@ public final class Reflector<O> {
             try {
                 jarFile = new JarFile(codePath);
             } catch (IOException e) {
+                e.printStackTrace();
                 return Collections.emptyList();
             }
 
             final List<String> mappedList = Util.enumerationToList(jarFile.entries())
                     .stream()
                     .map(ZipEntry::getName)
+                    .map(s -> s.replace(System.lineSeparator(), "/"))
                     .filter(f -> f.endsWith(".class"))
                     .collect(Collectors.toList());
 
